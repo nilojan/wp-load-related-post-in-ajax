@@ -14,9 +14,10 @@
  add_action('single_template', 'sra_init');
  function sra_init() {
 
- 	// Add code to index pages.
+ 	// check if single post
  	if( is_single() ) {	
 	global $post;
+	// check if the post is enabled to show the related post
 	if( !empty( $post->meta_val ) ) {
     
  		// Queue JS and CSS
@@ -36,7 +37,7 @@
  			'all'
  		);
 		
- 		// Add some parameters for the JS.
+ 		// Add some parameters for the JS. set the ajax url and the post id
  		wp_localize_script(
  			'sra-related-posts',
  			'sra_related',
@@ -49,32 +50,34 @@
 	wp_reset_query();
  	}
  }
+ // the ajax function hook for logged in user and non logged in user
 add_action( 'wp_ajax_nopriv_my_related_posts', 'my_related_posts' );
 add_action('wp_ajax_my_related_posts','my_related_posts');
 
-		function my_related_posts() {
-
-			$related = new WP_Query( array( 'category__in' => wp_get_post_categories($_REQUEST['pido']), 'posts_per_page' => 3, 'post__not_in' => array($_REQUEST['pido']) ) );
-			if( $related->have_posts() ) { 
-			  while( $related->have_posts() ) { $related->the_post(); 
-			/*whatever you want to output*/ ?>
+function my_related_posts() {
+	$pido = is_int($_POST['pido']);
+	// query to get the latest 3 post from same category
+	$related = new WP_Query( array( 'category__in' => wp_get_post_categories($pido), 'posts_per_page' => 3, 'post__not_in' => array($pido) ) );
+		if($related->have_posts()){
+		echo "<h3>Related Articles</h3><ul class='relpost'>";
+			while( $related->have_posts() ) { $related->the_post();
+			/* the html output */ ?>
 			<li class="post clearfix" id="post-<?php the_ID(); ?>">
-					<div class="post-content clearfix">
-						<a href="<?php the_permalink() ?>" title="<?php the_title(); ?>">
-						<h2 class="post-title"><?php the_title(); ?></h2></a>
-						<div><a href="<?php the_permalink() ?>" title="<?php the_title(); ?>"><?php the_post_thumbnail('thumbnail');  ?></a></div>
-						<div class="post-text">
-							 <?php //the_excerpt();
+				<div class="post-content clearfix">
+				<a href="<?php the_permalink() ?>" title="<?php the_title(); ?>">
+					<h4 class="post-title"><?php the_title(); ?></h4></a>
+					<div class="post-img"><a href="<?php the_permalink() ?>" title="<?php the_title(); ?>"><?php the_post_thumbnail('thumbnail');  ?></a></div>
+					<div class="post-text"><?php //the_excerpt();
 							 echo mb_strimwidth(get_the_excerpt(), 0, 150, '...');
-							 //echo excerpt(30); ?>							 
-						</div>
-					</div>
-			   </li>
-			<?php
-			  }
-			}
-			wp_reset_query();
+							 //echo excerpt(30); ?>
+							 </div>
+				</div>
+			</li>
+		<?php
 		}
+		echo "</ul>";
+	}wp_die();
+}
 
 // Limit Excerpt Length by number of Words
 /*
@@ -102,7 +105,7 @@ function see_rel_custom_meta() {
 add_action( 'add_meta_boxes', 'see_rel_custom_meta' );
 
 /**
- * Outputs the content of the see related
+ * Outputs the content of the see related checkbox
  */
 function see_rel_meta_callback( $post ) {
     wp_nonce_field( basename( __FILE__ ), 'see_rel_nonce' );
