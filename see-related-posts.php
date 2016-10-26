@@ -23,7 +23,7 @@
  		// Queue JS and CSS
  		wp_enqueue_script(
  			'sra-related-posts',
- 			plugin_dir_url( __FILE__ ) . 'js/related-posts.js',
+ 			plugin_dir_url( __FILE__ ) . 'related-posts.js',
  			array('jquery'),
  			'1.0',
  			true
@@ -31,7 +31,7 @@
  		
  		wp_enqueue_style(
  			'sra-style',
- 			plugin_dir_url( __FILE__ ) . 'css/style.css',
+ 			plugin_dir_url( __FILE__ ) . 'style.css',
  			false,
  			'1.0',
  			'all'
@@ -55,9 +55,8 @@ add_action( 'wp_ajax_nopriv_my_related_posts', 'my_related_posts' );
 add_action('wp_ajax_my_related_posts','my_related_posts');
 
 function my_related_posts() {
-	$pido = is_int($_POST['pido']);
 	// query to get the latest 3 post from same category
-	$related = new WP_Query( array( 'category__in' => wp_get_post_categories($pido), 'posts_per_page' => 3, 'post__not_in' => array($pido) ) );
+	$related = new WP_Query( array( 'category__in' => wp_get_post_categories($_POST['pido']), 'posts_per_page' => 3, 'post__not_in' => array($_POST['pido']) ) );
 		if($related->have_posts()){
 		echo "<h3>Related Articles</h3><ul class='relpost'>";
 			while( $related->have_posts() ) { $related->the_post();
